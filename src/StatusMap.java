@@ -6,6 +6,14 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+/*
+ * The changes made for HW6 have very little effect on the thread safety of my StatusMap class. Changing the getSnapshot to a sorted list had now
+ * effect on thread safety. I did the sorting outside of the critical section and made sure that all of the objects in the returned list were deep copies. 
+ * In returning the ordered pairs from getPosition and getVelocity I created the ordered pair objects within the critical section and cloned the arrow that
+ * is encapsulated in them. Thus, changing those two methods will also not have a negative effect on the thread safety of this class.
+ */
+
+
 /* What you have to build... */
 public class StatusMap {	
 	private static long clock;
@@ -107,13 +115,10 @@ public class StatusMap {
 		  
 		  //Sort the copy by distance
 		  Collections.sort(deepCopyList, new Comparator<Trajectory>() {
-			  @Override
-			  public int compare(Trajectory t0, Trajectory t1) {
-				  Arrow origin = new Arrow(0L, 0L, 0L);
-				  
-				  if (Arrow.distance(t0.getPosition(), origin) > Arrow.distance(t1.getPosition(), origin)) {
+			  public int compare(Trajectory t0, Trajectory t1) {				  
+				  if (Arrow.distance(t0.getPosition(), Arrow.ORIGIN) > Arrow.distance(t1.getPosition(), Arrow.ORIGIN)) {
 					  return 1;
-				  } else if (Arrow.distance(t0.getPosition(), origin) < Arrow.distance(t1.getPosition(), origin)) {
+				  } else if (Arrow.distance(t0.getPosition(), Arrow.ORIGIN) < Arrow.distance(t1.getPosition(), Arrow.ORIGIN)) {
 					  return -1;
 				  } else {
 					  return 0;
