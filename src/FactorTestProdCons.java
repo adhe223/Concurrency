@@ -16,7 +16,6 @@ public class FactorTestProdCons {
   public static void main(String[] args) throws Exception {
     ExecutorService exec = Executors.newFixedThreadPool(NTHREADS);
     ExecutorService factorPrinter = Executors.newFixedThreadPool(NTHREADS);
-    int countAdded = 0;
     //final PCQueue<ArrayList<Long>> results = new PCQueue<ArrayList<Long>>();
 
     /*
@@ -45,9 +44,8 @@ public class FactorTestProdCons {
     // now get tasks to work on
     long value = getNextValueToFactor(source);
     while (value > 0) {
-      countAdded++;
       System.out.println("Submitting task: " + value);
-      exec.execute(new FactorProducer(value,factorPrinter, exec, countAdded)); // submit to pool
+      exec.execute(new FactorProducer(value, factorPrinter)); // submit to pool
       value = getNextValueToFactor(source);
     }
 
@@ -55,9 +53,13 @@ public class FactorTestProdCons {
     // FIXME: replace PCQueue with another Executorservice.
     // Use the shutdown() capability of ExecutorService.
     
-    
+    //Shutdown producer
     exec.shutdown();
-    //factorPrinter.shutdown();
+    exec.awaitTermination(20, TimeUnit.SECONDS);
+    
+    //Shutdown consumer
+    factorPrinter.shutdown();
+    factorPrinter.awaitTermination(20, TimeUnit.SECONDS);
   }
 
   private static long getNextValueToFactor(InputStream s) {
