@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /*
  * The changes made for HW6 have very little effect on the thread safety of my StatusMap class. Changing the getSnapshot to a sorted list had now
@@ -15,26 +17,26 @@ import java.util.Set;
 
 
 /* What you have to build... */
-public class StatusMap {	
+public class ReadWriteStatusMap {	
 	private long clock;
-	private Object clockLock = new Object();
+	private ReadWriteLock rwLock = new ReentrantReadWriteLock();
 	private HashMap<Object, Trajectory> map = new HashMap<Object, Trajectory>();
 	
-	  StatusMap() {
+	  ReadWriteStatusMap() {
 		  clock = 0;
 	  }
 	
 	  void insert(Object o, Trajectory t) {
 		  Trajectory defCopy = t.clone();
-		  synchronized (clockLock) {
+		  rwLock.writeLock().lock();
 			  if (!map.containsKey(o)) {
 				  map.put(o, defCopy);
 			  }
-		  }
+		  rwLock.writeLock().unlock();
 	  }
   
 	  void tick() throws OverflowException {
-		  synchronized (clockLock) {
+		  rwLock.writeLock().lock();
 			  if (clock + 1 > 0) {
 				  clock++;
 				  
@@ -46,11 +48,11 @@ public class StatusMap {
 			  } else {
 				  throw new OverflowException("The clock overflowed!");
 			  }
-		  }
+		  rwLock.writeLock().unlock();
 	  }
 	  
 	  void tick(int elapsedTime) throws OverflowException {  // XXX note change
-		  synchronized (clockLock) {
+		  rwLock.writeLock().lock();
 			  if (clock + elapsedTime > 0) {
 				  clock = clock + elapsedTime;
 				  
@@ -62,45 +64,52 @@ public class StatusMap {
 			  } else {
 				  throw new OverflowException("The clock overflowed!");
 			  }
-		  }
+		  rwLock.writeLock().unlock();
 	  }
 	
 	  OrderedPair<Arrow, Long> getPosition(Object o) {
-		  synchronized (clockLock) {		  
+		  rwLock.readLock().lock();	  
 			  if (map.containsKey(o)) {
-				  return new OrderedPair<Arrow, Long>(map.get(o).getPosition(), clock);
+				  OrderedPair<Arrow, Long> toReturn = new OrderedPair<Arrow, Long>(map.get(o).getPosition(), clock);
+				  rwLock.readLock().unlock();
+				  return toReturn;
 			  } else {
-				  return new OrderedPair<Arrow, Long>(null, clock);
+				  OrderedPair<Arrow, Long> toReturn = new OrderedPair<Arrow, Long>(null, clock);
+				  rwLock.readLock().unlock();
+				  return toReturn;
 			  }
-		  }
 	  }
 	  
 	  OrderedPair<Arrow, Long> getVelocity(Object o) {
-		  synchronized (clockLock) {
-			  if (map.containsKey(o)) {
-				  return new OrderedPair<Arrow, Long>(map.get(o).getVelocity(), clock);
-			  } else {
-				  return new OrderedPair<Arrow, Long>(null, clock);
-			  }
+		  rwLock.readLock().lock();	  
+		  if (map.containsKey(o)) {
+			  OrderedPair<Arrow, Long> toReturn = new OrderedPair<Arrow, Long>(map.get(o).getVelocity(), clock);
+			  rwLock.readLock().unlock();
+			  return toReturn;
+		  } else {
+			  OrderedPair<Arrow, Long> toReturn = new OrderedPair<Arrow, Long>(null, clock);
+			  rwLock.readLock().unlock();
+			  return toReturn;
 		  }
 	  }
 	  
 	  boolean accelerate(Object o, Arrow a) {
-		  synchronized (clockLock) {
+		  rwLock.writeLock().lock();
 			  if (map.containsKey(o)) {
 				  map.get(o).accelerate(a);
+				  rwLock.writeLock().unlock();
 				  return true;
 			  } else {
+				  rwLock.writeLock().unlock();
 				  return false;
 			  }
-		  }
 	  }
 	  
 	  public OrderedPair<List<Object>,Long> getNearbyObjects(Arrow position, long radius) {
 		  List<Object> objectsWithinRadius = new ArrayList<Object>();
 		  long clock;
 		  
-		  synchronized(clockLock) {
+		  rwLock.readLock().lock();
 			  for (Object o : map.keySet()) {
 				  if (Arrow.distance(position, map.get(o).getPosition()) <= radius) {
 					  objectsWithinRadius.add(o);
@@ -108,27 +117,29 @@ public class StatusMap {
 			  }
 			  
 			  clock = getGlobalTime();
-		  }
+		  rwLock.readLock().unlock();
 		  
 		  return new OrderedPair<List<Object>, Long> (objectsWithinRadius, clock);
 	  }
 	  
 	  long getGlobalTime() {
-		  synchronized(clockLock) {
-			  return clock;
-		  }
+		  rwLock.readLock().lock();
+			  long toReturn = clock;
+		  rwLock.readLock().unlock();
+		  
+		  return toReturn;
 	  }
 	  
 	  List<Trajectory> getSnapshot() {
 		  List<Trajectory> deepCopyList = new ArrayList<Trajectory>();
 		  
-		  synchronized (clockLock) {
+		  rwLock.readLock().lock();
 			  Set<Object> mapKeySet = map.keySet();
 			  
 			 for (Object o : mapKeySet) {
 				  deepCopyList.add(map.get(o).clone());
 			  }
-		  }
+		  rwLock.readLock().unlock();
 		  
 		  //Sort the copy by distance
 		  Collections.sort(deepCopyList, new Comparator<Trajectory>() {
@@ -149,13 +160,13 @@ public class StatusMap {
 	  @Override public String toString() {
 		  StringBuilder toReturn = new StringBuilder("");
 		  
-		  synchronized (clockLock) {
+		  rwLock.readLock().lock();
 			  Set<Object> keys = map.keySet();
 			  for (Object o : keys) {
 				  Trajectory objTraj = map.get(o);				  
 				  toReturn.append("\nObject: " + o + "    Trajectory: "+ objTraj);
 			  }
-		  }
+		  rwLock.readLock().unlock();
 		  
 		  return toReturn.toString();
 	  }
