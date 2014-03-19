@@ -101,7 +101,8 @@ public class StatusMap {
 		  long clock;
 		  
 		  synchronized(clockLock) {
-			  for (Object o : map.keySet()) {
+			  Set<Object> keys = map.keySet();
+			  for (Object o : keys) {
 				  if (Arrow.distance(position, map.get(o).getPosition()) <= radius) {
 					  objectsWithinRadius.add(o);
 				  }
