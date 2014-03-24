@@ -40,7 +40,7 @@ public class MapDriverST {
 		rwSM.insert(new String("object3"), t3);
 		
 		//Print the initial map
-		System.out.println("Status at time " + sm.getGlobalTime() + ":");
+		System.out.println("\nStatus at time " + sm.getGlobalTime() + ":");
 		System.out.println(sm);
 		System.out.println(rwSM);
 		
@@ -62,7 +62,7 @@ public class MapDriverST {
 				System.out.println("RWStatusMap threw an OverflowException.");
 			}
 			
-			System.out.println("Status at time " + sm.getGlobalTime() + ":");
+			System.out.println("\nStatus at time " + sm.getGlobalTime() + ":");
 			System.out.println(sm);
 			System.out.println(rwSM);
 		}
@@ -84,12 +84,12 @@ public class MapDriverST {
 			System.out.println("RWStatusMap threw an OverflowException.");
 		}
 		
-		System.out.println("Status at time " + sm.getGlobalTime() + ":");
+		System.out.println("\nStatus at time " + sm.getGlobalTime() + ":");
 		System.out.println(sm);
 		System.out.println(rwSM);
 		
 		//Test within range on two objects at varying radii
-		System.out.println("Objects within range:");
+		System.out.println("\nObjects within range of object0:");
 		System.out.println("Objects within range 0:");
 		System.out.println(sm.getNearbyObjects(sm.getPosition("object0").getLeft(), 0).getLeft());
 		System.out.println("Objects within range 100:");
@@ -97,6 +97,7 @@ public class MapDriverST {
 		System.out.println("Objects within range 500:");
 		System.out.println(sm.getNearbyObjects(sm.getPosition("object0").getLeft(), 500).getLeft());
 		
+		System.out.println("\nObjects within range of object2:");
 		System.out.println("Objects within range 0:");
 		System.out.println(sm.getNearbyObjects(sm.getPosition("object2").getLeft(), 0).getLeft());
 		System.out.println("Objects within range 100:");
@@ -121,12 +122,12 @@ public class MapDriverST {
 			System.out.println("RWStatusMap threw an OverflowException.");
 		}
 		
-		System.out.println("Status at time " + sm.getGlobalTime() + ":");
+		System.out.println("\nStatus at time " + sm.getGlobalTime() + ":");
 		System.out.println(sm);
 		System.out.println(rwSM);
 		
 		//Test within range on two objects at varying radii
-		System.out.println("Objects within range:");
+		System.out.println("\nObjects within range of object1:");
 		System.out.println("Objects within range 0:");
 		System.out.println(sm.getNearbyObjects(sm.getPosition("object1").getLeft(), 0).getLeft());
 		System.out.println("Objects within range 100:");
@@ -134,13 +135,12 @@ public class MapDriverST {
 		System.out.println("Objects within range 500:");
 		System.out.println(sm.getNearbyObjects(sm.getPosition("object1").getLeft(), 500).getLeft());
 		
+		System.out.println("\nObjects within range of object3:");
 		System.out.println("Objects within range 0:");
 		System.out.println(sm.getNearbyObjects(sm.getPosition("object3").getLeft(), 0).getLeft());
 		System.out.println("Objects within range 100:");
 		System.out.println(sm.getNearbyObjects(sm.getPosition("object3").getLeft(), 100).getLeft());
 		System.out.println("Objects within range 500:");
 		System.out.println(sm.getNearbyObjects(sm.getPosition("object3").getLeft(), 500).getLeft());
-	}
-	
-	
+	}	
 }
