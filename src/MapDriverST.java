@@ -1,6 +1,7 @@
 public class MapDriverST {
+	//Testing a separate version of StatusMap that uses the Java read/write lock. I have commented these tests out.
 	private static final StatusMap sm = new StatusMap();
-	private static final ReadWriteStatusMap rwSM = new ReadWriteStatusMap();	//Status map experiment using ReadWrite java locks
+	//private static final ReadWriteStatusMap rwSM = new ReadWriteStatusMap();	//Status map experiment using ReadWrite java locks
 	
 	public static void main(String args[]) {
 		//Object 0 - 2D space
@@ -33,22 +34,25 @@ public class MapDriverST {
 		sm.insert(new String("object2"), t2);
 		sm.insert(new String("object3"), t3);
 		
+		/*
 		//Insert objects into rwStatusMap (insert makes a defensive copy so this will not interfere with other test)
 		rwSM.insert(new String("object0"), t0);
 		rwSM.insert(new String("object1"), t1);
 		rwSM.insert(new String("object2"), t2);
 		rwSM.insert(new String("object3"), t3);
+		*/
 		
 		//Print the initial map
+		System.out.println("See the expectedOutcome.txt and compare the output to the values it contains to check for correctness.");
 		System.out.println("\nStatus at time " + sm.getGlobalTime() + ":");
 		System.out.println(sm);
-		System.out.println(rwSM);
+		//System.out.println(rwSM);
 		
 		//Consecutive tick calculations
 		for (int i = 0; i < 3; i++) {
 			Arrow acc = new Arrow(1L, 1L, 1L);
 			sm.accelerate("object0", acc);
-			rwSM.accelerate("object0", acc);
+			//rwSM.accelerate("object0", acc);
 			
 			try {
 				sm.tick();
@@ -56,21 +60,23 @@ public class MapDriverST {
 				System.out.println("StatusMap threw an OverflowException.");
 			}
 			
+			/*
 			try {
 				rwSM.tick();
 			} catch (OverflowException e) {
 				System.out.println("RWStatusMap threw an OverflowException.");
 			}
+			*/
 			
 			System.out.println("\nStatus at time " + sm.getGlobalTime() + ":");
 			System.out.println(sm);
-			System.out.println(rwSM);
+			//System.out.println(rwSM);
 		}
 		
 		//Now two ticks on specific increments
 		Arrow acc = new Arrow(2L, 0L, -2L);
 		sm.accelerate("object2", acc);
-		rwSM.accelerate("object2", acc);
+		//rwSM.accelerate("object2", acc);
 		
 		try {
 			sm.tick(2);
@@ -78,15 +84,17 @@ public class MapDriverST {
 			System.out.println("StatusMap threw an OverflowException.");
 		}
 		
+		/*
 		try {
 			rwSM.tick(2);
 		} catch (OverflowException e) {
 			System.out.println("RWStatusMap threw an OverflowException.");
 		}
+		*/
 		
 		System.out.println("\nStatus at time " + sm.getGlobalTime() + ":");
 		System.out.println(sm);
-		System.out.println(rwSM);
+		//System.out.println(rwSM);
 		
 		//Test within range on two objects at varying radii
 		System.out.println("\nObjects within range of object0:");
@@ -108,7 +116,7 @@ public class MapDriverST {
 		//Second incremental ticks
 		acc = new Arrow(5L, 0L, -5L);
 		sm.accelerate("object3", acc);
-		rwSM.accelerate("object3", acc);
+		//rwSM.accelerate("object3", acc);
 		
 		try {
 			sm.tick(5);
@@ -116,15 +124,17 @@ public class MapDriverST {
 			System.out.println("StatusMap threw an OverflowException.");
 		}
 		
+		/*
 		try {
 			rwSM.tick(5);
 		} catch (OverflowException e) {
 			System.out.println("RWStatusMap threw an OverflowException.");
 		}
+		*/
 		
 		System.out.println("\nStatus at time " + sm.getGlobalTime() + ":");
 		System.out.println(sm);
-		System.out.println(rwSM);
+		//System.out.println(rwSM);
 		
 		//Test within range on two objects at varying radii
 		System.out.println("\nObjects within range of object1:");
