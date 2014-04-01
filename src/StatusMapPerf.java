@@ -2,6 +2,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;	
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -15,20 +16,23 @@ import java.util.Set;
 
 
 /* What you have to build... */
-public class StatusMap {	
+public class StatusMapPerf {	
 	private long clock;
 	private Object clockLock = new Object();
+	private Object mapLock = new Object();
 	private HashMap<Object, Trajectory> map = new HashMap<Object, Trajectory>();
 	
-	  StatusMap() {
+	  StatusMapPerf() {
 		  clock = 0;
 	  }
 	
 	  void insert(Object o, Trajectory t) {
 		  Trajectory defCopy = t.clone();
 		  synchronized (clockLock) {
-			  if (!map.containsKey(o)) {
-				  map.put(o, defCopy);
+			  synchronized (mapLock) {
+				  if (!map.containsKey(o)) {
+					  map.put(o, defCopy);
+				  }
 			  }
 		  }
 	  }
@@ -38,9 +42,14 @@ public class StatusMap {
 			  if (clock + 1 > 0) {
 				  clock++;
 				  
-				  //Now update everything
-				  for (Trajectory t : map.values()) {
-					  t.update(1);	//One because this tick increments the time by one
+				  synchronized (mapLock) {
+					  //Now update everything
+					  for (Object o : map.keySet()) {
+						  synchronized(o) {
+							  Trajectory t = map.get(o);
+							  t.update(1);	//One because this tick increments the time by one
+						  }
+					  }
 				  }
 				  
 			  } else {
@@ -54,9 +63,14 @@ public class StatusMap {
 			  if (clock + elapsedTime > 0) {
 				  clock = clock + elapsedTime;
 				  
-				  //Now update everything
-				  for (Trajectory t : map.values()) {
-					  t.update(elapsedTime);
+				  synchronized(mapLock) {
+					  //Now update everything
+					  for (Object o : map.keySet()) {
+						  synchronized(o) {
+							  Trajectory t = map.get(o);
+							  t.update(elapsedTime);
+						  }
+					  }
 				  }
 				  
 			  } else {
@@ -66,7 +80,7 @@ public class StatusMap {
 	  }
 	
 	  OrderedPair<Arrow, Long> getPosition(Object o) {
-		  synchronized (clockLock) {		  
+		  synchronized (o) {		  
 			  if (map.containsKey(o)) {
 				  return new OrderedPair<Arrow, Long>(map.get(o).getPosition(), clock);
 			  } else {
@@ -76,7 +90,7 @@ public class StatusMap {
 	  }
 	  
 	  OrderedPair<Arrow, Long> getVelocity(Object o) {
-		  synchronized (clockLock) {
+		  synchronized (o) {
 			  if (map.containsKey(o)) {
 				  return new OrderedPair<Arrow, Long>(map.get(o).getVelocity(), clock);
 			  } else {
@@ -86,7 +100,7 @@ public class StatusMap {
 	  }
 	  
 	  boolean accelerate(Object o, Arrow a) {
-		  synchronized (clockLock) {
+		  synchronized (o) {
 			  if (map.containsKey(o)) {
 				  map.get(o).accelerate(a);
 				  return true;
@@ -101,16 +115,20 @@ public class StatusMap {
 		  long clock;
 		  
 		  synchronized(clockLock) {
+			  clock = getGlobalTime();
+			  
+			  synchronized(mapLock) {
 			  Set<Object> keys = map.keySet();
-			  for (Object o : keys) {
-				  if (Arrow.distance(position, map.get(o).getPosition()) <= radius) {
-					  objectsWithinRadius.add(o);
+				  for (Object o : keys) {
+					  synchronized(o) {
+						  if (Arrow.distance(position, map.get(o).getPosition()) <= radius) {
+							  objectsWithinRadius.add(o);
+						  }
+					  }
 				  }
 			  }
-			  
-			  clock = getGlobalTime();
 		  }
-		  
+			  
 		  return new OrderedPair<List<Object>, Long> (objectsWithinRadius, clock);
 	  }
 	  
@@ -124,10 +142,12 @@ public class StatusMap {
 		  List<Trajectory> deepCopyList = new ArrayList<Trajectory>();
 		  
 		  synchronized (clockLock) {
-			  Set<Object> mapKeySet = map.keySet();
-			  
-			 for (Object o : mapKeySet) {
-				  deepCopyList.add(map.get(o).clone());
+			  synchronized(mapLock) {
+				  for (Object o : map.keySet()) {	
+					  synchronized(o) {
+						  deepCopyList.add(map.get(o).clone());
+					  }
+				  }
 			  }
 		  }
 		  
@@ -151,10 +171,15 @@ public class StatusMap {
 		  StringBuilder toReturn = new StringBuilder("");
 		  
 		  synchronized (clockLock) {
-			  Set<Object> keys = map.keySet();
-			  for (Object o : keys) {
-				  Trajectory objTraj = map.get(o);				  
-				  toReturn.append("\nObject: " + o + "    Trajectory: "+ objTraj);
+			  synchronized(mapLock) {
+				  Set<Object> keys = map.keySet();
+				  for (Object o : keys) {
+					  Trajectory objTraj;
+					  synchronized(o) {
+						  objTraj = map.get(o);	
+					  }
+					  toReturn.append("\nObject: " + o + "    Trajectory: "+ objTraj);
+				  }
 			  }
 		  }
 		  
