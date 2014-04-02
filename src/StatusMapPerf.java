@@ -8,14 +8,10 @@ import java.util.List;
 import java.util.Set;
 
 /*
- * The changes made for HW6 have very little effect on the thread safety of my StatusMap class. Changing the getSnapshot to a sorted list had now
- * effect on thread safety. I did the sorting outside of the critical section and made sure that all of the objects in the returned list were deep copies. 
- * In returning the ordered pairs from getPosition and getVelocity I created the ordered pair objects within the critical section and cloned the arrow that
- * is encapsulated in them. Thus, changing those two methods will also not have a negative effect on the thread safety of this class.
+ * Using a lazy implementation would offer improved performance because Of the dominance of tick() and accelerate() over
+ * calls to getSnapshot. However, I did not have time this week to make a heavy adjustment to my eager implementation.
  */
 
-
-/* What you have to build... */
 public class StatusMapPerf {	
 	private long clock;
 	private Object clockLock = new Object();
@@ -29,10 +25,8 @@ public class StatusMapPerf {
 	  void insert(Object o, Trajectory t) {
 		  Trajectory defCopy = t.clone();
 		  synchronized (clockLock) {
-			  synchronized (mapLock) {
-				  if (!map.containsKey(o)) {
-					  map.put(o, defCopy);
-				  }
+			  if (!map.containsKey(o)) {
+				  map.put(o, defCopy);
 			  }
 		  }
 	  }
